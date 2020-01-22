@@ -1,0 +1,164 @@
+</!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+<style type="text/css">
+#maindiv{
+	width:100%;
+	height:100%;
+}
+</style>
+
+</head>
+<body>
+<body width=100%>
+<div id=maindiv>
+<canvas id="myCanvas" width="1000" height="500" style="border:1px solid #000000;"></canvas>
+</div>
+
+<script src="kepler.js"></script>
+<script src="matrix.js"></script>
+<script src="routines.js"></script>
+<script>
+
+var obliquity=GetXRotationMatrix(23.4351669673*Math.PI/180);
+
+var series=getRSTSeries(38.2540,-85.7590);
+drawDaytimePolygons(series);
+drawDarknessPolygon(series);
+
+for(var i=0;i<7;i++){
+	plotPlanet(series,i);
+}
+
+function getRSTSeries(lat,lon){
+	var date=new Date(2018,0,1,12,0,0,0);
+	var series=new Array();
+	for(var d=0;d<365;d++){
+		var tdate=new Date(date);
+		tdate.setDate(tdate.getDate()+1);
+		date=tdate;
+
+		series[d]=getRST(date,lat,lon);
+	}
+	return series;
+
+}
+
+function drawDaytimePolygons(series){
+	var c=document.getElementById("myCanvas");
+	var ctx=c.getContext("2d");
+	var vscale=c.height/24.0;
+	var hscale=c.width/364.0;
+
+	ctx.beginPath(); 
+	ctx.fillStyle="#55f";
+	ctx.moveTo(0,0);
+	ctx.lineTo(0,c.height);
+	ctx.lineTo(c.width,c.height);
+	ctx.lineTo(c.width,0);
+	ctx.closePath();
+	ctx.fill();
+}
+
+function drawDarknessPolygon(series){
+	var c=document.getElementById("myCanvas");
+	var ctx=c.getContext("2d");
+	var vscale=c.height/24.0;
+	var hscale=c.width/364.0;
+
+	ctx.beginPath(); 
+	ctx.fillStyle="#000044";
+	ctx.moveTo(0,series[0][0].rise*vscale);
+
+	var prev=series[0][0].rise;
+	for(var d=1;d<series.length;d++){
+		var curr=getPlotTime(series[d][0].rise);
+		ctx.lineTo(d*hscale,curr*vscale);
+	}
+	
+	ctx.lineTo((series.length-1)*hscale,series[series.length-1][0].set*vscale);
+	for(var d=series.length-1;d>0;d--){
+		var curr=getPlotTime(series[d][0].set);
+		ctx.lineTo(d*hscale,curr*vscale);
+	}
+	ctx.fill();
+}
+
+function plotPlanet(series,planet){
+	var c=document.getElementById("myCanvas");
+	var ctx=c.getContext("2d");
+	var vscale=c.height/24.0;
+	var hscale=c.width/364.0;
+
+	ctx.beginPath(); 
+	ctx.lineWidth="1";
+	ctx.strokeStyle=series[0][planet].color;
+	ctx.moveTo(0,series[0][planet].rise*vscale);
+	ctx.setLineDash([0]);
+
+	var prev=series[0][planet].rise;
+	for(var d=1;d<series.length;d++){
+		var curr=getPlotTime(series[d][planet].rise);
+		if(Math.abs(curr-prev)>1){
+			ctx.moveTo(d*hscale,curr*vscale);
+		} else {
+			ctx.lineTo(d*hscale,curr*vscale);
+		}
+		prev=curr;
+	}
+	ctx.stroke();
+	
+	ctx.moveTo(0,series[0][planet].set*vscale);
+	ctx.setLineDash([5,3]);
+	prev=series[0][planet].set;
+	for(var d=1;d<series.length;d++){
+		var curr=getPlotTime(series[d][planet].set);
+		if(Math.abs(curr-prev)>1){
+			ctx.moveTo(d*hscale,curr*vscale);
+		} else {
+			ctx.lineTo(d*hscale,curr*vscale);
+		}
+		prev=curr;
+	}
+	ctx.stroke();
+}
+
+function getPlotTime(t){
+	var t2=t-12;
+	if(t2<0)t2+=24;
+	return 24-t2;
+
+}
+
+function getRST(date,lat,lon){
+	var JD=julianDay(date);
+	var planets=computeAll(date);
+
+	toGeocentric(planets);
+	for(var i=0;i<9;i++){
+		MatrixMul(obliquity,planets[i]);
+	}
+
+	for(var i=0;i<9;i++){
+		var t=Cartisian2Polar(planets[i]);
+		planets[i].ra=t.ra;
+		planets[i].dec=t.dec;
+		var rst=getRistSetTransit(JD,lat,lon,planets[i].ra,planets[i].dec);
+		rst.transit-=5;
+		rst.rise-=5;
+		rst.set-=5;
+		if(rst.transit<0) rst.transit+=24;
+		if(rst.rise<0) rst.rise+=24;
+		if(rst.set<0) rst.set+=24;
+		planets[i].transit=rst.transit;
+		planets[i].rise=rst.rise;
+		planets[i].set=rst.set;
+		//console.log("%s: %s %s %s",planets[i].name, phms(rst.transit), phms(rst.rise),phms(rst.set));
+	}
+
+	return planets;
+}
+</script>
+</body>
+</html>
