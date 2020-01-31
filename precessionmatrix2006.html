@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Precession Matrix</title>
+</head>
+<body>
+
+<script>
+
+const arcsec2rad=1.0/60.0/60.0*Math.PI/180.0;
+const t=(JD-2451545.0)/36525.0;
+
+//Table 6.3 from Explanatory Supplement
+const Za=(2.650545+(2306.083227+(0.2988499+(0.01801828+(-0.000005971+(-0.0000003173)*t)*t)*t)*t)*t)*arcsec2rad;
+const za=(-2.650545+(2306.077181+(1.0927348+(0.01826837+(-0.000028596+(-0.0000002904)*t)*t)*t)*t)*t)*arcsec2rad;
+const ta=(2004.191903+(-0.4294934+(-0.04182264+(-0.000007089+(-0.0000001274)*t)*t)*t)*t)*t*arcsec2rad;
+
+//EQ 6.20 from Explanatory Supplement
+//P=R3(-za) R2(ta) R3(-Za)
+
+//Inverse eq 6.22
+//P=R3(Za) R2(ta) R3 (za)
+
+/*
+Epanded matrix (6.21)
+cz=cos(za); sz=sin(za);
+cZ=cos(Za); sZ=sin(Za);
+ct=cos(ta); st=sin(ta);
+
+cz*ct*cZ-sz*sZ      -cz*ct*sZ-sz*cZ           -cz*st
+sz*ct*cZ+cA*sZ      -sz*cT*sZ+cz*cZ           -sz*st
+st*cZ               -st*sZ                    ct
+
+*/
+const P=new Array();
+P[0]=new Array();
+P[1]=new Array();
+P[2]=new Array();
+
+cz=Math.cos(za); sz=Math.sin(za);
+cZ=Math.cos(Za); sZ=Math.sin(Za);
+ct=Math.cos(ta); st=Math.sin(ta);
+
+P[0][0]=cz*ct*cZ-sz*sZ;
+P[1][0]=sz*ct*cZ+cA*sZ;
+P[2][0]=st*cZ;
+P[0][1]=-cz*ct*sZ-sz*cZ;
+P[1][1]=-sz*cT*sZ+cz*cZ;
+P[2][1]=-st*sZ;
+P[0][2]=-cz*st;
+P[1][2]=-sz*st;
+P[2][2]=ct;
+
+console.log(P);
+
+</script>
+
+</body>
+</html>
