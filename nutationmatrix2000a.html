@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<script type="text/javascript">
+
+T=JD-2451545.0/36525.0;
+//epsa=23d 26' 21".40600 = 46".836769T - 0".0001831TT + 0".00200340TTT 5".76e-7TTTT - 4".34e-8TTTTT  //6.39  TODO: convert to radians
+eps=epsa+deps
+
+N=R1(-eps)R3(-dpsi)R1(epsa)
+
+ce=cos(eps) se=sin(eps)
+cea=cos(epsa) sea=sin(epsa)
+cp=cos(dpsi) sp=sin(dpsi)
+
+//Expanded matrix, eq 6.41 from Explanatory Supplement 3rd ed
+cp			-sp*cea				-sp*sea
+sp*cea 		cp*ce*cea+se*sea	cp*ce*sea-se*cea
+sp*se 		cp*se*cea-ce*sea 	cp*se*sea+ce*cea
+
+
+
+
+//Low precision.  Eq 6.48
+dpsi=-0.0048*sin(125.0-0.05295*d) - 0.0004*sin(200.9+1.97129*d) //TODO:convert deg to rad
+deps=0.0026*cos(125.0-0.05295*d) + 0.0002*cos(200.9+1.97129*d) //TODO:convert deg to rad
+
+//low precision matrix eq 6.45 (accurate to one part in 10^8)
+1				-dpsi*cos(eps)		-deps*sin(eps)
+dpsi*cos(eps)	1					-deps
+dpsi*sin(eps)	deps				1
+
+	
+</script>
+
+
+
+</body>
+</html>
