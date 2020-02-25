@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Julian Day Number Conversion</title>
+</head>
+<body>
+<script>
+'use strict';
+
+/*
+Implementation of the Gregorian to Julian Day Number algorithm from the Astronomical Almanac 3rd ed
+Greg Miller (gmiller@gregmiller.net) http://www.astrogreg.com 2020
+Released as public domain
+*/
+
+console.log(gregorianToJulian(2000,1,1));
+
+function gregorianToJulian(Y,M,D){
+	//Table 15.14
+	const y=4716;
+	const j=1401;
+	const m=2;
+	const n=12;
+	const r=4;
+	const p=1461;
+	const q=0;
+	const v=3;
+	const u=5;
+	const s=153;
+	const t=2;
+	const w=2;
+	const A=184;
+	const B=274277;
+	const C=-38;
+
+	//Algorithm 3 section 15.11.3
+	const h=M-m;
+	const g=Y+y-INT((n-h)/n);
+	const f=mod(h-1+n,n);
+	const e=INT((p*g+q)/r)+D-1-j;
+	let J=e+INT((s*f+t)/u);
+	J=J-INT((3*(INT((g+A)/100)))/4)-C;
+
+	if(Y<1582 || (Y==1582 && M < 10) || (Y==1582 && M==10 && D < 5)){
+		J+=10;
+	}
+
+	return J;
+
+}
+
+//Used to remove the factional part of any integer, postive or negative.
+/*
+function INT(a){
+	return Math.trunc(a);
+}
+*/
+
+function mod(a,b){
+	let t=a%b;
+	if(t<0){
+		t+=b;
+	}
+	return t;
+}
+
+function INT(d){
+	if(d>0){
+		return Math.floor(d);
+	}
+	return Math.floor(d)-1;
+}
+
+function gregorianDateToJulianDate(year, month, day){
+	let isGregorian=true;
+	if(year<1582 || (year == 1582 && (month < 10 || (month==10 && day < 5)))){
+		isGregorian=false;
+	}
+
+	if (month < 3){
+		year = year - 1;
+		month = month + 12;
+	}
+
+	let b = 0;
+	if (isGregorian){
+	let a = INT(year / 100.0);
+		b = 2 - a + INT(a / 4.0);
+	}
+
+	let jd=INT(365.25 * (year + 4716)) + INT(30.6001 * (month + 1)) + day + b - 1524.5;
+
+	if(year<-4715){  //Added to work with negative Julian Day Numbers
+		jd+=1;
+	}
+
+
+	return jd;
+}	
+
+function test(Y,M,D,JD){
+	const jd=gregorianDateToJulianDate(Y,M,D,0,0,0);
+	//const jd=gregorianToJulian(Y,M,D)-.5;
+	if(JD!=jd){
+		console.log(`FAIL! ${Y} ${M} ${D} expected:${JD} got:${jd} ${JD-jd}`);
+	} else {
+		//console.log("OK");
+	}
+}
+
+</script>
+<script src="jdtestdata2.js"></script>
+<script>console.log("Done");</script>
+
+</body>
+</html>
